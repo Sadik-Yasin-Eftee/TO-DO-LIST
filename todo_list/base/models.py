@@ -15,5 +15,6 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+    #ordering of to do list
     class Meta:
         ordering = ['complete']
