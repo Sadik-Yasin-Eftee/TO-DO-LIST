@@ -1,3 +1,4 @@
+from multiprocessing import context
 from operator import truediv
 from turtle import title, update
 from django.shortcuts import render
@@ -28,6 +29,14 @@ class TaskList(LoginRequiredMixin , ListView): #LoginRequiredMixin is used to re
     model = Task
     context_object_name = 'tasks'
 
+    #this part is done so that the user can only see his own data
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs) #kwargs = key word argument
+        context['tasks'] = context['tasks'].filter(user = self.request.user) #making sure that the datas/context of the user are restricted to that user only
+        context['count'] = context['tasks'].filter(complete = False).count() #counting the number of task not done. no need to filter here as the filtering has been done in the upper section
+                                                                            #provides query set
+        return context
+
 
 #views the tasks in detail
 class TaskDetail(LoginRequiredMixin , DetailView):
@@ -39,14 +48,18 @@ class TaskDetail(LoginRequiredMixin , DetailView):
 #create new task
 class TaskCreate(LoginRequiredMixin , CreateView):
     model = Task
-    fields = '__all__'
+    fields = ['title' , 'description' , 'complete']
     success_url = reverse_lazy('tasks') #redirects the page to the initial page after adding a task
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user #makes sure that the forms filled up is added to that users database
+        return super(TaskCreate, self).form_valid(form)
 
 
 #update a task
 class TaskUpdate(LoginRequiredMixin , UpdateView):
     model = Task
-    fields = '__all__'
+    fields = ['title' , 'description' , 'complete']
     success_url = reverse_lazy('tasks') 
 
 
