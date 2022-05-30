@@ -1,17 +1,22 @@
+from atexit import register
 from multiprocessing import context
 from operator import truediv
 from turtle import title, update
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 
+import base
+
 from .models import Task
 
-from django.views.generic.edit import CreateView,UpdateView, DeleteView
+from django.views.generic.edit import CreateView,UpdateView, DeleteView, FormView
 from django.urls import reverse_lazy
 
 from django.contrib.auth.views import LoginView 
 from django.contrib.auth.mixins import LoginRequiredMixin #used for restricting user to see the tasks before login
+from django.contrib.auth.forms import UserCreationForm #django provides form
+from django.contrib.auth import login #user don't have to login again. they will be logged in 
 
 #user login system
 class CustomLoginView(LoginView):
@@ -22,6 +27,27 @@ class CustomLoginView(LoginView):
     #redirects the user to the home page after login
     def get_success_url(self):
         return reverse_lazy('tasks')
+
+
+class RegisterPage(FormView):
+    template_name = 'base/register.html'
+    form_class = UserCreationForm #django pre-built form is generated and this form is to be submitted
+    redirect_authenticated_user = True #if the user is authenticated then don't keep in this page
+    success_url = reverse_lazy('tasks')
+
+    def form_valid(self, form):
+        user = form.save() #create the user using form  
+        if user is not None: #if the user has been validated/registered redirect to the login page
+            login(self.request, user)
+        return super(RegisterPage, self).form_valid(form)
+
+
+    #the below funtion is used so that the user cannot enter register and login page while he is logged in
+    def get(self, *args, **kwargs):
+        if self.request.user.is_authenticated: #if user is authenticated then redirect to home-page
+            return redirect('tasks')
+        return super(RegisterPage, self).get(*args, **kwargs) #else redirect to register page
+
 
 
 #views the set of tasks
