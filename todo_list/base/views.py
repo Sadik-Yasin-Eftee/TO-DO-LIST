@@ -10,6 +10,7 @@ from django.views.generic.edit import CreateView,UpdateView, DeleteView
 from django.urls import reverse_lazy
 
 from django.contrib.auth.views import LoginView 
+from django.contrib.auth.mixins import LoginRequiredMixin #used for restricting user to see the tasks before login
 
 #user login system
 class CustomLoginView(LoginView):
@@ -23,34 +24,34 @@ class CustomLoginView(LoginView):
 
 
 #views the set of tasks
-class TaskList(ListView):
+class TaskList(LoginRequiredMixin , ListView): #LoginRequiredMixin is used to restrict the user
     model = Task
     context_object_name = 'tasks'
 
 
 #views the tasks in detail
-class TaskDetail(DetailView):
+class TaskDetail(LoginRequiredMixin , DetailView):
     model = Task
     context_object_name = 'task'
     template_name = 'base/task.html'
 
 
 #create new task
-class TaskCreate(CreateView):
+class TaskCreate(LoginRequiredMixin , CreateView):
     model = Task
     fields = '__all__'
     success_url = reverse_lazy('tasks') #redirects the page to the initial page after adding a task
 
 
 #update a task
-class TaskUpdate(UpdateView):
+class TaskUpdate(LoginRequiredMixin , UpdateView):
     model = Task
     fields = '__all__'
     success_url = reverse_lazy('tasks') 
 
 
 #delete a specific task
-class DeleteView(DeleteView):
+class DeleteView(LoginRequiredMixin , DeleteView):
     model = Task
     context_object_name = 'task'
     success_url = reverse_lazy('tasks') 
