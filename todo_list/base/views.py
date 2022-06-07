@@ -1,3 +1,4 @@
+from asyncio import tasks
 from atexit import register
 from multiprocessing import context
 from operator import truediv
@@ -5,6 +6,7 @@ from turtle import title, update
 from django.shortcuts import render, redirect
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
+
 
 import base
 
@@ -59,8 +61,14 @@ class TaskList(LoginRequiredMixin , ListView): #LoginRequiredMixin is used to re
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs) #kwargs = key word argument
         context['tasks'] = context['tasks'].filter(user = self.request.user) #making sure that the datas/context of the user are restricted to that user only
-        context['count'] = context['tasks'].filter(complete = False).count() #counting the number of task not done. no need to filter here as the filtering has been done in the upper section
-                                                                            #provides query set
+        context['count'] = context['tasks'].filter(complete = False).count() #counting the number of task not done. no need to filter here as the filtering has been done in the upper section #provides query set 
+                                                        
+        search_input = self.request.GET.get('search-area') or '' #blank space if required results aren't met in search
+        
+        if search_input:
+            context['tasks'] = context['tasks'].filter(title__startswith = search_input) #search funtion added.This part includes the search logic
+        
+        context['search_input'] = search_input
         return context
 
 
